@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>The Anglo Academy — Soporte de Facturación</title>
+<style>
+  :root{
+    --bg:#f5f7fb;
+    --primary:#1f3a68; /* azul formal */
+    --primary-600:#244b8a;
+    --accent:#63779c;  /* gris azulado */
+    --muted:#8b9bb6;
+    --card:#ffffff;
+    --ok:#116149;
+    --warn:#8a5a00;
+    --err:#7d1a1a;
+    --ring: rgba(36,75,138,.25);
+    --radius:18px;
+  }
+
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    margin:0;
+    font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Inter,Arial;
+    background:var(--bg);
+    color:#0d1b2a;
+    line-height:1.45;
+  }
+
+  header{
+    background:linear-gradient(135deg, var(--primary), #0f2242);
+    color:white;
+    padding:32px 18px;
+    text-align:center;
+    position:sticky; top:0; z-index:10;
+    box-shadow:0 4px 14px rgba(0,0,0,.12);
+  }
+  header h1{
+    margin:0 0 8px;
+    font-size: clamp(18px, 2.8vw, 28px);
+    letter-spacing:.3px;
+  }
+  header p{
+    margin:0;
+    color:#e0e7ffcc;
+    font-size: clamp(13px, 1.7vw, 16px);
+  }
+
+  .container{
+    max-width:1100px;
+    margin:24px auto 64px;
+    padding:0 16px;
+    display:grid;
+    grid-template-columns: 1fr 420px;
+    gap:18px;
+  }
+  @media (max-width: 980px){
+    .container{ grid-template-columns: 1fr; }
+  }
+
+  .card{
+    background:var(--card);
+    border-radius:var(--radius);
+    box-shadow:0 8px 24px rgba(15,34,66,.08);
+    border:1px solid #e6ebf5;
+  }
+
+  .panel{
+    padding:18px;
+  }
+
+  /* Buscador */
+  .searchbar{
+    display:flex; gap:10px; align-items:center;
+    background:#f1f4fa; border-radius:14px; padding:10px 12px; border:1px solid #e1e7f2;
+  }
+  .searchbar input{
+    width:100%; border:0; outline:none; background:transparent; font-size:15px;
+  }
+  .tags{
+    margin-top:12px; display:flex; flex-wrap:wrap; gap:8px;
+  }
+  .tag{
+    padding:6px 10px; border-radius:999px; font-size:12.5px; background:#eef3ff; color:var(--primary-600);
+    border:1px solid #dfe8ff; cursor:pointer;
+  }
+
+  /* Lista de problemas */
+  .list{
+    margin-top:14px; display:grid; gap:12px;
+  }
+  .item{
+    display:flex; gap:12px; align-items:flex-start; padding:14px; border:1px solid #e6ebf5; background:white;
+    border-radius:14px; transition:box-shadow .2s, transform .04s;
+    cursor:pointer;
+  }
+  .item:hover{ box-shadow:0 6px 16px rgba(36,75,138,.12) }
+  .item:active{ transform:translateY(1px) }
+  .badge{
+    min-width:30px; height:30px; border-radius:50%; display:grid; place-items:center;
+    background:#e8eef9; color:var(--primary-600); font-weight:600; font-size:13px;
+  }
+  .item h3{ margin:0 0 6px; font-size:16px; color:#15294b }
+  .item p{ margin:0; color:#4a5570; font-size:13.5px }
+
+  /* Detalle / Soluciones */
+  .detail{
+    padding:16px; border-top:1px dashed #e3e9f4; margin-top:14px;
+  }
+  .detail h4{ margin:0 0 10px; color:var(--primary-600) }
+  .steps{ margin:0; padding-left:18px; }
+  .steps li{ margin:6px 0 }
+  .helper{
+    margin-top:12px; font-size:12.5px; color:#5c6b86;
+  }
+
+  /* Lado derecho: CTA */
+  .cta{
+    position:sticky; top:98px;
+  }
+  .cta .title{
+    padding:16px 16px 0; color:#203b69; font-weight:700;
+  }
+  form{ padding:16px; display:grid; gap:12px }
+  label{ font-size:13px; color:#3c4b68; font-weight:600 }
+  input[type="text"], input[type="email"], textarea, select{
+    width:100%; padding:10px 12px; border-radius:12px; border:1px solid #d7e0ef; background:#fbfcff;
+    outline:none; font-size:14px;
+  }
+  textarea{ min-height:110px; resize:vertical }
+  .row{ display:grid; gap:10px; grid-template-columns: 1fr 1fr }
+  @media (max-width:540px){ .row{ grid-template-columns: 1fr } }
+  .actions{ display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+  .btn{
+    border:0; border-radius:12px; padding:11px 14px; font-weight:700; cursor:pointer;
+    background:var(--primary-600); color:white; box-shadow:0 6px 18px var(--ring);
+  }
+  .btn.secondary{ background:#e9edf7; color:#183059; font-weight:600 }
+  .note{ font-size:12.5px; color:#5c6b86 }
+  .message{ font-size:13px; padding:10px 12px; border-radius:10px }
+  .message.ok{ background:#e6f4ee; color:var(--ok); border:1px solid #c9e8dc }
+  .message.warn{ background:#fff6e5; color:var(--warn); border:1px solid #ffe3b3 }
+  .message.err{ background:#fdeaea; color:var(--err); border:1px solid #ffd7d7 }
+
+  footer{
+    max-width:1100px; margin:24px auto; padding:0 16px;
+    color:#7786a6; font-size:12.5px;
+  }
+  .source-chip{
+    display:inline-block; background:#eef3ff; color:#355189; border:1px solid #dfe8ff; padding:4px 8px; border-radius:999px; margin:4px 6px 0 0;
+  }
+</style>
+</head>
+<body>
+<header>
+  <h1>BIENVENIDO A THE ANGLO ACADEMY • SOLUCIONEMOS TUS PROBLEMAS DE FACTURACIÓN</h1>
+  <p>Encuentra tu problema, sigue los pasos sugeridos o contáctanos si necesitas ayuda adicional.</p>
+</header>
+
+<main class="container">
+  <!-- Columna izquierda: Identificar problema + soluciones -->
+  <section class="card panel">
+    <div class="searchbar">
+      <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M10 2a8 8 0 0 1 6.32 12.906l4.387 4.387l-1.414 1.414l-4.387-4.387A8 8 0 1 1 10 2m0 2a6 6 0 1 0 0 12a6 6 0 0 0 0-12"/></svg>
+      <input id="search" placeholder="Busca tu problema (ej. cargo duplicado, datos fiscales, impuesto, pago rechazado)"/>
+    </div>
+    <div class="tags" id="quickTags"></div>
+
+    <div class="list" id="issuesList" aria-live="polite"></div>
+    <div id="emptyState" class="message warn" style="display:none">No encontramos resultados con tu búsqueda. Intenta con otras palabras o usa el formulario de contacto.</div>
+  </section>
+
+  <!-- Columna derecha: CTA formulario -->
+  <aside class="cta card">
+    <div class="title">¿No encontraste solución?</div>
+    <form id="contactForm" novalidate>
+      <div class="message warn">
+        Si tu caso no aparece o sigues con dudas, escríbenos. Te responderemos a la brevedad.
+      </div>
+      <label for="subject">Título de tu problema</label>
+      <input type="text" id="subject" placeholder="Ej. Cargo duplicado en mi factura" required />
+
+      <label for="body">Describe tu caso</label>
+      <textarea id="body" placeholder="Cuenta los detalles: número de factura, fecha, monto, lo que intentaste..."></textarea>
+
+      <div class="row">
+        <div>
+          <label for="name">Tu nombre</label>
+          <input type="text" id="name" placeholder="Nombre y apellidos" required />
+        </div>
+        <div>
+          <label for="email">Tu correo</label>
+          <input type="email" id="email" placeholder="tucorreo@dominio.com" required />
+        </div>
+      </div>
+
+      <div class="actions">
+        <button type="button" class="btn" id="sendBtn">Enviar correo</button>
+        <button type="reset" class="btn secondary">Limpiar</button>
+      </div>
+      <div id="formMsg" class="message" style="display:none"></div>
+      <p class="note">Al presionar “Enviar correo”, abriremos tu cliente de correo con el mensaje pre-llenado a <strong>imadaytripper@hotmail.com</strong>.</p>
+    </form>
+  </aside>
+</main>
+
+<footer>
+  <div>Problemas y soluciones basados en mejores prácticas de la industria y guías públicas. (Ver fuentes en la sección de soporte o al pie de esta página si se integran).</div>
+  <div style="margin-top:6px">
+    <span class="source-chip">Errores de factura y resolución (CFPB / FCBA)</span>
+    <span class="source-chip">Disputas por cargos no reconocidos</span>
+    <span class="source-chip">Fallos de pago y dunning (recobro)</span>
+    <span class="source-chip">Discrepancias comunes en facturas</span>
+  </div>
+</footer>
+
+<script>
+/** === Datos: problemas principales y soluciones sugeridas ===
+ * Referenciados a partir de fuentes públicas (ver README/fuentes al pie).
+ * Nota: Ajusta textos al contexto local (p.ej., requisitos fiscales específicos).
+ */
+const ISSUES = [
+  {
+    id:"cargos-incorrectos",
+    titulo:"Cargos incorrectos o no reconocidos",
+    desc:"Ves un monto que no corresponde, conceptos erróneos o un cargo que no autorizaste.",
+    keywords:["incorrecto","no reconocido","equivocado","monto","desconocido","desconocida","fraude","error de cobro","ajuste"],
+    pasos:[
+      "Valida el detalle de la factura: concepto, cantidad, precio unitario, descuentos e impuestos.",
+      "Revisa si hay cargos duplicados o prorrateos de periodos.",
+      "Reúne evidencia (capturas, pedido, contrato, correos).",
+      "Solicita una nota de crédito o refacturación con los datos correctos.",
+      "Si es un cargo no reconocido, contacta al emisor y a tu banco para iniciar una disputa de cargo."
+    ]
+  },
+  {
+    id:"duplicado",
+    titulo:"Cargo duplicado / factura duplicada",
+    desc:"Se cobró o emitió más de una vez el mismo concepto.",
+    keywords:["duplicado","doble","repetido"],
+    pasos:[
+      "Compara fechas y números de factura/folio.",
+      "Confirma si hubo reintentos de pago automáticos.",
+      "Solicita cancelación de la factura duplicada y devolución o nota de crédito."
+    ]
+  },
+  {
+    id:"fallo-pago",
+    titulo:"Pago fallido o rechazado",
+    desc:"El pago con tarjeta o transferencia no pasó, o el recibo no se reflejó.",
+    keywords:["fallo","rechazado","tarjeta","pago","declinado","insuficientes","vencida","expirada"],
+    pasos:[
+      "Verifica fondos, fecha de vencimiento y dirección de facturación de la tarjeta.",
+      "Actualiza método de pago (tarjeta vencida, dirección, CVV).",
+      "Intenta nuevamente más tarde; algunos sistemas reintentan de forma automática.",
+      "Si persiste, usa un método alterno o contacta a soporte con el código de error."
+    ]
+  },
+  {
+    id:"discrepancias",
+    titulo:"Discrepancias en cantidades, precios o impuestos",
+    desc:"Hay diferencias entre pedido, contrato y factura (cantidades, tarifas, IVA/IGV/VAT).",
+    keywords:["discrepancia","precio","cantidad","impuesto","iva","igv","vat","tasa","retención","dif"],
+    pasos:[
+      "Revisa orden de compra/pedido y contrato.",
+      "Comprueba reglas de impuestos aplicadas y exenciones.",
+      "Solicita corrección mediante nota de crédito y emisión de factura ajustada."
+    ]
+  },
+  {
+    id:"datos-fiscales",
+    titulo:"Datos fiscales incorrectos (nombre, RFC/NIT, dirección)",
+    desc:"Errores en razón social, identificadores fiscales o domicilio.",
+    keywords:["fiscales","rfc","nit","razón","direccion","domicilio","cif","nif"],
+    pasos:[
+      "Envía tus datos fiscales completos y en el formato oficial.",
+      "Pide refacturación con los datos corregidos (o complemento si aplica).",
+      "Valida que el nuevo documento reemplace al anterior (cancelación/nota)."
+    ]
+  },
+  {
+    id:"factura-no-recibida",
+    titulo:"No recibí la factura o llegó tarde",
+    desc:"No te llegó al correo, al portal o llegó fuera de tiempo.",
+    keywords:["no recibí","tarde","extraviada","enviada","no llega","correo"],
+    pasos:[
+      "Busca en spam/promociones y verifica la bandeja del correo registrado.",
+      "Descárgala desde el portal si está disponible.",
+      "Confirma y actualiza tu correo de recepción; pide reenvío o reemisión si venció el periodo."
+    ]
+  },
+  {
+    id:"cancelacion-suscripcion",
+    titulo:"Se siguió cobrando después de cancelar",
+    desc:"Te hicieron cargos pese a haber cancelado o cambiado de plan.",
+    keywords:["cancelé","cancelacion","plan","suscripcion","seguido cobrando","post cancelación"],
+    pasos:[
+      "Adjunta comprobante/fecha de cancelación.",
+      "Solicita reembolso de periodos posteriores a la cancelación.",
+      "Pide confirmación escrita del cambio/cierre para evitar futuros cobros."
+    ]
+  },
+  {
+    id:"formato-cumplimiento",
+    titulo:"Formato de factura y requerimientos de cumplimiento",
+    desc:"Falta información obligatoria o el formato no cumple normas.",
+    keywords:["formato","cumplimiento","obligatorio","regulación","norma","legal"],
+    pasos:[
+      "Verifica que la factura incluya datos obligatorios (emisor, receptor, folio, fecha, conceptos e impuestos).",
+      "Si faltan, solicita corrección o reemisión cumpliendo normativa aplicable.",
+      "Conserva ambas versiones y la nota de crédito, si corresponde."
+    ]
+  },
+  {
+    id:"moneda-cambio",
+    titulo:"Moneda o tipo de cambio incorrecto",
+    desc:"La divisa o el tipo de cambio aplicado no corresponde.",
+    keywords:["moneda","divisa","tipo de cambio","usd","mxn","eur"],
+    pasos:[
+      "Confirma la moneda acordada en el pedido/contrato.",
+      "Pide evidencia del tipo de cambio usado (fecha/fuente).",
+      "Solicita ajuste de importe o reemisión con el tipo correcto."
+    ]
+  },
+  {
+    id:"moratorios",
+    titulo:"Cargos por mora o intereses mal calculados",
+    desc:"Se aplicaron recargos o intereses que no proceden.",
+    keywords:["mora","moratorios","intereses","recargo","penalidad"],
+    pasos:[
+      "Revisa términos de pago y fechas efectivas de abono.",
+      "Solicita evidencia del cálculo (tasa, días, base).",
+      "Pide ajuste o condonación si hubo error o causa imputable al sistema."
+    ]
+  }
+];
+
+const QUICK_TAGS = [
+  "Cargos incorrectos","Cargo duplicado","Pago rechazado",
+  "Impuestos","Datos fiscales","No recibí factura","Cancelación",
+  "Moneda","Intereses"
+];
+
+// Render inicial
+const listEl = document.getElementById('issuesList');
+const emptyEl = document.getElementById('emptyState');
+const searchEl = document.getElementById('search');
+const tagsEl = document.getElementById('quickTags');
+
+function renderTags(){
+  tagsEl.innerHTML = QUICK_TAGS.map(t=>`<button type="button" class="tag" data-q="${t}">${t}</button>`).join("");
+  tagsEl.querySelectorAll('.tag').forEach(btn=>{
+    btn.addEventListener('click', ()=>{ searchEl.value = btn.dataset.q; filterAndRender(); });
+  });
+}
+
+function issueHTML(issue, idx){
+  return `
+    <article class="item" data-id="${issue.id}" aria-expanded="false">
+      <div class="badge">${idx+1}</div>
+      <div>
+        <h3>${issue.titulo}</h3>
+        <p>${issue.desc}</p>
+        <div class="detail" style="display:none">
+          <h4>Pasos sugeridos</h4>
+          <ol class="steps">
+            ${issue.pasos.map(p=>`<li>${p}</li>`).join("")}
+          </ol>
+          <div class="helper">¿Sigue el problema? Usa el formulario de la derecha para contactarnos.</div>
+        </div>
+      </div>
+    </article>
+  `;
+}
+
+function attachToggles(){
+  listEl.querySelectorAll('.item').forEach(card=>{
+    card.addEventListener('click', ()=>{
+      const expanded = card.getAttribute('aria-expanded') === 'true';
+      // cerrar otros
+      listEl.querySelectorAll('.item').forEach(c=>{
+        c.setAttribute('aria-expanded','false');
+        c.querySelector('.detail').style.display='none';
+      });
+      // abrir este
+      if(!expanded){
+        card.setAttribute('aria-expanded','true');
+        card.querySelector('.detail').style.display='block';
+        // prellenar asunto del formulario
+        const title = card.querySelector('h3')?.textContent || 'Consulta de facturación';
+        document.getElementById('subject').value = title;
+      }
+    });
+  });
+}
+
+function filterAndRender(){
+  const q = (searchEl.value || "").toLowerCase().trim();
+  const filtered = !q ? ISSUES : ISSUES.filter(it=>{
+    const hay = (it.titulo + " " + it.desc + " " + it.keywords.join(" ")).toLowerCase();
+    return hay.includes(q);
+  });
+  listEl.innerHTML = filtered.map(issueHTML).join("");
+  attachToggles();
+  emptyEl.style.display = filtered.length ? 'none':'block';
+}
+
+renderTags();
+filterAndRender();
+
+// Contacto (mailto)
+const form = document.getElementById('contactForm');
+const msg = document.getElementById('formMsg');
+document.getElementById('sendBtn').addEventListener('click', ()=>{
+  msg.style.display='none';
+  msg.className='message';
+
+  const subject = (document.getElementById('subject').value || "").trim();
+  const body = (document.getElementById('body').value || "").trim();
+  const name = (document.getElementById('name').value || "").trim();
+  const email = (document.getElementById('email').value || "").trim();
+
+  if(!subject || !name || !email){
+    msg.textContent = "Por favor completa al menos: Título, Tu nombre y Tu correo.";
+    msg.classList.add('err'); msg.style.display='block';
+    return;
+  }
+
+  // Validación simple email
+  const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if(!re.test(email)){
+    msg.textContent = "Ingresa un correo válido (ej. usuario@dominio.com).";
+    msg.classList.add('err'); msg.style.display='block';
+    return;
+  }
+
+  // Construir mailto
+  const to = "imadaytripper@hotmail.com";
+  const esc = encodeURIComponent;
+  const lines = [
+    body || "(Describe tu caso aquí)",
+    "",
+    "— — —",
+    `Nombre: ${name}`,
+    `Correo: ${email}`
+  ].join("\n");
+  const url = `mailto:${to}?subject=${esc(subject)}&body=${esc(lines)}`;
+
+  // abrir
+  window.location.href = url;
+
+  msg.textContent = "Abriendo tu cliente de correo con el mensaje pre-llenado…";
+  msg.classList.add('ok'); msg.style.display='block';
+});
+
+// Accesibilidad: Enter en buscador
+searchEl.addEventListener('input', filterAndRender);
+searchEl.addEventListener('keydown', (e)=>{ if(e.key==='Enter'){ e.preventDefault(); filterAndRender(); }});
+</script>
+</body>
+</html>
